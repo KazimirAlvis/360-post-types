@@ -1,0 +1,25 @@
+.clinic-info-row {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 8px; /* space between rows */
+}
+.clinic-review-row input,
+.clinic-info-row input {
+	margin-right: 10px;
+	width: 25%;
+}
+.clinic-review-row textarea,
+.clinic-info-row textarea {
+	width: 65%;
+	margin-right: 10px;
+}
+.clinic-review-row,
+.clinic-address-row {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 8px; /* space between rows */
+}
+.clinic-address-row input {
+	width: 50% !important;
+	margin-right: 10px;
+}

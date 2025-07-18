@@ -1,0 +1,113 @@
+/*--------------------------------------------------------------
+ astra reset styles
+--------------------------------------------------------------*/
+.single-clinic .ast-container main .clinic-single,
+.single-clinic .ast-container main,
+.single-clinic .ast-container {
+	max-width: 100%;
+	width: 100%;
+	padding-left: 0px;
+	padding-right: 0px;
+	padding-top: 0;
+}
+.single-clinic .ast-container main .clinic-single img {
+	box-shadow: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: unset;
+}
+
+.single-clinic .ast-container .clinic_cta_wrap .clinic-cta-BG-wrap .clinic-cta-inner h3 {
+	margin-bottom: 20px;
+}
+
+.single-clinic .elementor-35 .elementor-element.elementor-element-0ce76df {
+	background-color: #fff;
+}
+.single-clinic .ast-container .doctor-title {
+	font-size: 18px !important;
+}
+.map_heading p {
+	font-size: 18px !important;
+}
+.clinic-addresses li {
+	font-size: 15px !important;
+}
+.clinic_info .clinic-info_description p,
+.clinic-bio ul li,
+.clinic-bio p {
+	font-size: 16px !important;
+}
+
+/*--------------------------------------------------------------
+ Buttons
+--------------------------------------------------------------*/
+.single-clinic .ast-container main article pr360-questionnaire::part(begin-button) {
+	font-size: 18px;
+	font-family: var(--body-font);
+	font-weight: 500;
+	border-radius: 27px;
+	padding: 15px 30px !important;
+	margin-top: auto !important;
+	cursor: pointer;
+	width: 312px;
+	max-width: 312px !important;
+	height: 54px;
+	min-height: auto !important;
+	text-align: center;
+	white-space: nowrap;
+	transition: transform 0.2s ease, background-color 0.2s ease;
+	display: block;
+	margin: 0;
+	line-height: 22px;
+	text-decoration: none;
+	display: inline-block;
+	margin-bottom: 20px;
+}
+
+.single-clinic .ast-container main article pr360-questionnaire::part(begin-button) {
+	background-color: var(--cpt360-primary);
+	color: #ffffff;
+	border: 1px solid var(--cpt360-primary);
+}
+
+.single-clinic .ast-container main article pr360-questionnaire::part(begin-button):hover {
+	background-color: transparent !important;
+	color: #282e24 !important;
+	border: 1px solid #282e24 !important;
+}
+.btn_white_ol {
+	background-color: var(--cpt360-primary);
+	color: #ffffff;
+	border: 1px solid var(--cpt360-primary);
+}
+.single-clinic .ast-container .clinic_cta_wrap .clinic-cta-BG-wrap pr360-questionnaire::part(begin-button):hover {
+	background-color: transparent !important;
+	color: #fff !important;
+	border: 1px solid #fff !important;
+}
+
+@media (max-width: 768px) {
+	.btn_green {
+		font-size: 15px;
+		padding: 15px 30px;
+	}
+}
+
+@media (max-width: 480px) {
+	.btn_green {
+		font-size: 15px;
+		padding: 15px 25px;
+	}
+}
+.btn_green_ol {
+	transition: all 0.3s;
+	background-color: transparent;
+	color: var(--cpt360-primary);
+	text-decoration: none;
+	border: 1px solid var(--cpt360-primary);
+}
+.btn_green_ol:hover {
+	background-color: var(--cpt360-primary) !important;
+	color: #fff !important;
+	border: 1px solid var(--cpt360-primary) !important;
+}
