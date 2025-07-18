@@ -21,13 +21,30 @@ if ($assess_id) :
     $url = esc_url(home_url('/take-assessment/?clinic_id=' . $assess_id));
 ?>
 
-    <!-- PR360 questionnaire component with dynamic site-id -->
-    <pr360-questionnaire
-        url="wss://app.patientreach360.com/socket"
-        class="btn btn_white_ol"
-        site-id="<?php echo esc_attr($assess_id); ?>">
-        Take Risk Assessment Now
-    </pr360-questionnaire>
+<?php
+// 1) Determine your environment
+$env = function_exists('wp_get_environment_type')
+       ? wp_get_environment_type()
+       : 'production';
+
+// 2) Build the classes array only on local/dev
+$classes = [];
+if ( 'development' === $env /* or 'local' if you prefer */ ) {
+    $classes[] = 'btn';
+    $classes[] = 'btn_green';
+}
+
+// 3) Turn it into a string (or leave empty)
+$class_attr = $classes
+    ? ' class="' . esc_attr( implode( ' ', $classes ) ) . '"'
+    : '';
+?>
+<pr360-questionnaire
+    url="wss://app.patientreach360.com/socket"<?php echo $class_attr; ?>
+    site-id="<?php echo esc_attr( $assess_id ); ?>">
+    Take Risk Assessment Now
+</pr360-questionnaire>
+
 <?php
 endif;
 ?>
