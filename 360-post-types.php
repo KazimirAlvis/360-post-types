@@ -4,12 +4,36 @@
  * Plugin Name: 360 Post Types & Settings
  * Plugin URI:   https://github.com/KazimirAlvis/360-post-types
  * Description: Registers Clinics & Doctors CPTs, adds a State dropdown on Clinics, doctor->clinic relationships, and a global settings admin page for colors & fonts.
- * Version:     1.0.1
+ * Version:     1.0.5
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
  * GitHub Plugin URI: your-org/360-post-types
  * GitHub Branch:     main
  */
+
+ 
+
+
+// ─────────────────────────────────────────────────────────────────
+// 1) Include the Update Checker library (make sure that folder and file exist)
+// ─────────────────────────────────────────────────────────────────
+// 1) include the v5 autoloader
+require_once __DIR__ . '/plugin-update-checker/plugin-update-checker.php';
+
+// 2) import the factory
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+// 3) build the checker
+$updateChecker = PucFactory::buildUpdateChecker(
+    'https://github.com/KazimirAlvis/360-post-types/',
+    __FILE__,
+    '360-post-types'
+);
+
+// 4) override branch if you must (only works on the checker itself)
+$updateChecker->setBranch('main');
+
+
 
 if (! defined('ABSPATH')) exit;
 require_once __DIR__ . '/includes/register-cpt.php';
@@ -290,19 +314,4 @@ add_action( 'template_redirect', function() {
         exit;
     }
 } );
-// ───────────────────────────────────────────────────────────
-// Auto-update via GitHub tags
-// ───────────────────────────────────────────────────────────
-require_once __DIR__ . '/plugin-update-checker/plugin-update-checker.php';
 
-$updateChecker = Puc_v4_Factory::buildUpdateChecker(
-    'https://github.com/KazimirAlvis/360-post-types/', // Repo URL
-    __FILE__,                                         // Full path to this plugin file
-    '360-post-types'                                   // Plugin slug (folder name)
-);
-
-// If your default branch is 'main' instead of 'master':
-$updateChecker->setBranch('main');
-
-// (Only for PRIVATE repos) provide a GitHub Personal Access Token:
-// $updateChecker->setAuthentication( 'YOUR_GITHUB_TOKEN' );
