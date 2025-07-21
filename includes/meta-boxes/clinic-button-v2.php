@@ -40,12 +40,7 @@ if ( $assess_id ) :
     Take Risk Assessment Now
   </pr360-questionnaire>
 
-  <!-- Fallback link if JS component fails -->
-  <noscript>
-    <a href="<?php echo $take_url; ?>"<?php echo $class_attr; ?>>
-      Take Risk Assessment Now
-    </a>
-  </noscript>
+ 
 
 <?php
 endif;
