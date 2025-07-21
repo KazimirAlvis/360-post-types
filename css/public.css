@@ -294,8 +294,8 @@
 	border-bottom: 1px solid #ddd;
 
 	box-sizing: border-box;
-	height: 100%;
-	display: flex;
+	height: auto;
+	display: flex !important;
 	flex-direction: column;
 	justify-content: space-between;
 	gap: 20px;
@@ -316,6 +316,13 @@
 .reviewer-name {
 	text-align: center;
 	font-weight: bold;
+}
+
+.slick-initialized .slick-slide {
+	display: block;
+	text-align: center;
+}
+.clinic-reviews-slider .review-slide {
 }
 
 /*--------------------------------------------------------------
