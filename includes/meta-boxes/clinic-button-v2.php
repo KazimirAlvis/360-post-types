@@ -1,49 +1,51 @@
 <script>
-    // Check if the URL has the `open=true` query parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const shouldOpen = urlParams.has('open');
-
-    // Add the `open` attribute to the <pr360-questionnaire> tag if the parameter is present
-    window.addEventListener('DOMContentLoaded', () => {
-        const questionnaire = document.querySelector('pr360-questionnaire');
-        if (shouldOpen && questionnaire) {
-            questionnaire.setAttribute('open', '');
-        }
-    });
+  // 1) Your existing “?open” logic
+  const urlParams = new URLSearchParams(window.location.search);
+  const shouldOpen = urlParams.has('open');
+  window.addEventListener('DOMContentLoaded', () => {
+    const questionnaire = document.querySelector('pr360-questionnaire');
+    if ( shouldOpen && questionnaire ) {
+      questionnaire.setAttribute('open', '');
+    }
+  });
 </script>
 
 <?php
-// grab your saved Clinic ID
-$assess_id = get_post_meta(get_the_ID(), '_cpt360_assessment_id', true);
+// 2) Pull the ID via our new helper (per‐clinic or fallback to global)
+$assess_id = cpt360_get_assessment_id();
 
-if ($assess_id) :
-    // build your assessment link too if you need it
-    $url = esc_url(home_url('/take-assessment/?clinic_id=' . $assess_id));
-?>
+if ( $assess_id ) :
 
-<?php
-// 1) Determine your environment
-$env = function_exists('wp_get_environment_type')
+  // 3) (Optional) Build a clickable link if you need one
+  $take_url = esc_url( home_url( '/take-assessment/?clinic_id=' . $assess_id ) );
+
+  // 4) Only add .btn .btn_green on local/dev
+  $env = function_exists( 'wp_get_environment_type' )
        ? wp_get_environment_type()
        : 'production';
 
-// 2) Build the classes array only on local/dev
-$classes = [];
-if ( 'development' === $env /* or 'local' if you prefer */ ) {
-    $classes[] = 'btn';
-    $classes[] = 'btn_green';
-}
+  $classes = ( 'development' === $env ) 
+           ? [ 'btn', 'btn_green' ] 
+           : [];
 
-// 3) Turn it into a string (or leave empty)
-$class_attr = $classes
-    ? ' class="' . esc_attr( implode( ' ', $classes ) ) . '"'
-    : '';
+  $class_attr = $classes
+              ? ' class="' . esc_attr( implode( ' ', $classes ) ) . '"'
+              : '';
 ?>
-<pr360-questionnaire
-    url="wss://app.patientreach360.com/socket"<?php echo $class_attr; ?>
-    site-id="<?php echo esc_attr( $assess_id ); ?>">
+
+  <!-- Your PR360 component — just echo the dynamic attributes -->
+  <pr360-questionnaire
+      url="wss://app.patientreach360.com/socket"<?php echo $class_attr; ?>
+      site-id="<?php echo esc_attr( $assess_id ); ?>">
     Take Risk Assessment Now
-</pr360-questionnaire>
+  </pr360-questionnaire>
+
+  <!-- Fallback link if JS component fails -->
+  <noscript>
+    <a href="<?php echo $take_url; ?>"<?php echo $class_attr; ?>>
+      Take Risk Assessment Now
+    </a>
+  </noscript>
 
 <?php
 endif;

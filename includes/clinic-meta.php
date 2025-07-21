@@ -135,19 +135,7 @@ function clinic_thumbnail_render_metabox( $post ) {
 }
 
 
-// add_action( 'admin_enqueue_scripts', function( $hook ) {
-//   $screen = get_current_screen();
-//   if ( $screen && $screen->post_type === 'clinic' ) {
-//     wp_enqueue_media();
-//     wp_enqueue_script(
-//       'clinic-thumbnail-js',
-//       plugin_dir_url( __FILE__ ) . 'thumbnail-upload.js',
-//       array( 'jquery' ),
-//       '1.0',
-//       true
-//     );
-//   }
-// });
+
 
 // 4) Save the attachment ID
 add_action( 'save_post', function( $post_id, $post ) {
@@ -330,49 +318,64 @@ add_action( 'save_post', function( $post_id, $post ) {
 --------------------------------------------------------------*/
 
 /**
- * 5) Add “Clinic Assessment ID” meta box
+ * Clinic Meta: per‐Clinic Assessment ID meta box + helper
+ */
+
+/**
+ * 1) Add the “Clinic Assessment ID” meta box to the Clinic CPT.
  */
 add_action( 'add_meta_boxes', function() {
     add_meta_box(
-        'cpt360_clinic_assessment_id',
-        __( 'Clinic Assessment ID', 'cpt360' ),
-        'cpt360_render_assessment_id_metabox',
-        'clinic',
-        'normal',    // show in the sidebar
-        'default'
+        'cpt360_clinic_assessment_id',        // ID
+        __( 'Clinic Assessment ID', 'cpt360' ),// Title
+        'cpt360_render_assessment_id_metabox', // Callback
+        'clinic',                             // Post Type
+        'normal',                             // Context
+        'default'                             // Priority
     );
 } );
 
 /**
- * Render the Assessment ID field
+ * 2) Render the meta box form, falling back to the global setting.
+ *
+ * @param WP_Post $post
  */
 function cpt360_render_assessment_id_metabox( $post ) {
     wp_nonce_field( 'cpt360_save_assessment_id', 'cpt360_assessment_id_nonce' );
 
-    // Try to load any saved value
+    // Per-clinic saved value
     $saved = get_post_meta( $post->ID, '_cpt360_assessment_id', true );
 
-    // If nothing saved yet, use the global default
-    $default = '6959497a-70ba-4e52-a21d-19afc6c5144e';
-    $value   = $saved ? $saved : $default;
+    // Global fallback from our single settings array
+    $globals       = get_option( '360_global_settings', [] );
+    $global_default = $globals['assessment_id'] ?? '';
+
+    // Decide what to show in the input
+    $value = ( $saved !== '' ) ? $saved : $global_default;
 
     echo '<p><label for="cpt360_assessment_id_field">'
-       .  __( 'This ID will be appended to your “Take Assessment” buttons:', 'cpt360' )
+       .  __( 'Clinic Assessment ID:', 'cpt360' )
        .  '</label></p>';
     echo '<input type="text" '
        .  'id="cpt360_assessment_id_field" '
        .  'name="cpt360_assessment_id_field" '
        .  'value="' . esc_attr( $value ) . '" '
        .  'class="widefat" />';
+    
+    if ( $saved === '' && $global_default ) {
+        echo '<p class="description">'
+           . esc_html__( 'Using global default since this field is empty.', 'cpt360' )
+           . '</p>';
+    }
 }
 
 /**
- * Save the Assessment ID when the post is saved
+ * 3) Save the Clinic Assessment ID when the post is saved.
  */
 add_action( 'save_post', function( $post_id, $post ) {
-    // Bail early
+    // Bail on autosave, wrong CPT, or invalid nonce/cap
     if (
-        defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE
+        ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
         || $post->post_type !== 'clinic'
         || empty( $_POST['cpt360_assessment_id_nonce'] )
         || ! wp_verify_nonce( $_POST['cpt360_assessment_id_nonce'], 'cpt360_save_assessment_id' )
@@ -381,10 +384,9 @@ add_action( 'save_post', function( $post_id, $post ) {
         return;
     }
 
-    // Sanitize & save (or delete if left blank)
     $new = isset( $_POST['cpt360_assessment_id_field'] )
-           ? sanitize_text_field( wp_unslash( $_POST['cpt360_assessment_id_field'] ) )
-           : '';
+         ? sanitize_text_field( wp_unslash( $_POST['cpt360_assessment_id_field'] ) )
+         : '';
 
     if ( $new ) {
         update_post_meta( $post_id, '_cpt360_assessment_id', $new );
@@ -392,6 +394,30 @@ add_action( 'save_post', function( $post_id, $post ) {
         delete_post_meta( $post_id, '_cpt360_assessment_id' );
     }
 }, 10, 2 );
+
+/**
+ * 4) Helper: get the effective Assessment ID
+ *
+ * @param int|null $post_id Defaults to current post ID.
+ * @return string
+ */
+if ( ! function_exists( 'cpt360_get_assessment_id' ) ) {
+    function cpt360_get_assessment_id( $post_id = null ) {
+        $post_id = $post_id ?: get_the_ID();
+
+        // 1) Per-clinic override
+        $meta = get_post_meta( $post_id, '_cpt360_assessment_id', true );
+        if ( $meta ) {
+            return $meta;
+        }
+
+        // 2) Fallback to global setting
+        $globals = get_option( '360_global_settings', [] );
+        return $globals['assessment_id'] ?? '';
+    }
+}
+
+
 
 /*--------------------------------------------------------------
 # Clinic Bio Meta Box

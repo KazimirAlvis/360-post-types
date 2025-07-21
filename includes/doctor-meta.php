@@ -43,7 +43,7 @@ add_action( 'init', function() {
     register_post_meta( 'doctor', 'clinic_id', [
         'type'         => 'array',
         'single'       => false,
-        'show_in_rest' => true,
+        'show_in_rest' => false,
     ] );
 } );
 
