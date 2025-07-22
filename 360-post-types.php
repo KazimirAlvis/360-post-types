@@ -4,7 +4,7 @@
  * Plugin Name: 360 Post Types & Settings
  * Plugin URI:   https://github.com/KazimirAlvis/360-post-types
  * Description: Registers Clinics & Doctors CPTs, adds a State dropdown on Clinics, doctor->clinic relationships, and a global settings admin page for colors & fonts.
- * Version:     1.0.11
+ * Version:     1.0.13
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
  * GitHub Plugin URI: your-org/360-post-types
@@ -43,6 +43,7 @@ require_once __DIR__ . '/includes/doctor-meta.php';
 require_once __DIR__ . '/includes/clinic-meta.php';
 require_once __DIR__ . '/includes/yoast-integration.php';
 require_once __DIR__ . '/includes/export.php';
+require_once __DIR__ . '/includes/import.php';
 
 
 if (! defined('CPT360_PLUGIN_URL')) {
