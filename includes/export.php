@@ -17,12 +17,10 @@ add_action( 'admin_menu', function() {
  * 2) Render the Export UI form.
  */
 function cpt360_render_export_page() {
-    // security
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die( __( 'Permission denied', 'cpt360' ) );
     }
 
-    // on submit, WP redirects to admin-post.php; our handler runs there
     $action_url = admin_url( 'admin-post.php?action=cpt360_export_data' );
     ?>
     <div class="wrap">
@@ -54,13 +52,11 @@ function cpt360_render_export_page() {
               <p class="description"><?php _e( 'Hold ⌘ (Mac) or Ctrl (Win) to select multiple.', 'cpt360' ); ?></p>
             </td>
           </tr>
-
           <tr>
             <th><label for="cpt360_doctors"><?php _e( 'Doctors', 'cpt360' ); ?></label></th>
             <td>
               <select name="doctor_ids[]" id="cpt360_doctors" multiple size="8" style="width:100%;">
                 <?php
-                // adjust 'doctor' to your actual doctor CPT slug
                 $docs = get_posts([
                   'post_type'      => 'doctor',
                   'posts_per_page' => -1,
@@ -90,7 +86,6 @@ function cpt360_render_export_page() {
  * 3) Handle the export, generate CSV and send it.
  */
 add_action( 'admin_post_cpt360_export_data', function() {
-    // security + capability
     if (
         ! current_user_can( 'manage_options' )
         || empty( $_POST['cpt360_export_nonce'] )
@@ -103,26 +98,24 @@ add_action( 'admin_post_cpt360_export_data', function() {
     $clinic_ids = array_map( 'absint', (array) ( $_POST['clinic_ids'] ?? [] ) );
     $doctor_ids = array_map( 'absint', (array) ( $_POST['doctor_ids'] ?? [] ) );
 
-    // Gather all meta keys for clinics and doctors
+    // Gather all meta keys for both types
     $all_meta_keys = [];
-
     foreach ( $clinic_ids as $cid ) {
-        $meta = get_post_meta( $cid );
-        $all_meta_keys = array_merge( $all_meta_keys, array_keys( $meta ) );
+        $all_meta_keys = array_merge( $all_meta_keys, array_keys( get_post_meta( $cid ) ) );
     }
     foreach ( $doctor_ids as $did ) {
-        $meta = get_post_meta( $did );
-        $all_meta_keys = array_merge( $all_meta_keys, array_keys( $meta ) );
+        $all_meta_keys = array_merge( $all_meta_keys, array_keys( get_post_meta( $did ) ) );
     }
     $all_meta_keys = array_unique( $all_meta_keys );
     sort( $all_meta_keys );
 
-    // Standard columns
+    // Standard columns + extras for Doctor
     $columns = array_merge(
-        [ 'Type', 'ID', 'Title', 'Slug' ],
+        [ 'Type', 'ID', 'Title', 'Slug', 'Clinics', 'Doctor Name', 'Doctor Title' ],
         $all_meta_keys
     );
 
+    // Send CSV headers
     $filename = 'cpt360-export-' . date( 'Y-m-d' ) . '.csv';
     header( 'Content-Type: text/csv; charset=utf-8' );
     header( 'Content-Disposition: attachment; filename=' . $filename );
@@ -130,40 +123,78 @@ add_action( 'admin_post_cpt360_export_data', function() {
     $fp = fopen( 'php://output', 'w' );
     fputcsv( $fp, $columns );
 
+    //
     // Export Clinics
+    //
     foreach ( $clinic_ids as $cid ) {
         $post = get_post( $cid );
-        if ( ! $post || $post->post_type !== 'clinic' ) continue;
-        $meta = get_post_meta( $cid );
-        $row = [
-            'Type'  => 'Clinic',
-            'ID'    => $cid,
-            'Title' => $post->post_title,
-            'Slug'  => $post->post_name,
-        ];
-        foreach ( $all_meta_keys as $key ) {
-            $val = $meta[$key] ?? [''];
-            // Flatten arrays for CSV
-            $row[$key] = is_array($val) ? implode( '|', array_map( 'maybe_serialize', $val ) ) : maybe_serialize( $val );
+        if ( ! $post || $post->post_type !== 'clinic' ) {
+            continue;
         }
+
+        // Base row
+        $row = [
+            'Type'         => 'Clinic',
+            'ID'           => $cid,
+            'Title'        => $post->post_title,
+            'Slug'         => $post->post_name,
+            'Clinics'      => '',
+            'Doctor Name'  => '',
+            'Doctor Title' => '',
+        ];
+
+        // Add all meta keys
+        $meta = get_post_meta( $cid );
+        foreach ( $all_meta_keys as $key ) {
+            $val = $meta[ $key ] ?? [''];
+            $row[ $key ] = is_array( $val )
+                ? implode( '|', array_map( 'maybe_serialize', $val ) )
+                : maybe_serialize( $val );
+        }
+
         fputcsv( $fp, $row );
     }
 
+    //
     // Export Doctors
+    //
     foreach ( $doctor_ids as $did ) {
         $post = get_post( $did );
-        if ( ! $post || $post->post_type !== 'doctor' ) continue;
-        $meta = get_post_meta( $did );
-        $row = [
-            'Type'  => 'Doctor',
-            'ID'    => $did,
-            'Title' => $post->post_title,
-            'Slug'  => $post->post_name,
-        ];
-        foreach ( $all_meta_keys as $key ) {
-            $val = $meta[$key] ?? [''];
-            $row[$key] = is_array($val) ? implode( '|', array_map( 'maybe_serialize', $val ) ) : maybe_serialize( $val );
+        if ( ! $post || $post->post_type !== 'doctor' ) {
+            continue;
         }
+
+        // Map clinic_id → names
+        $cl_ids = get_post_meta( $did, 'clinic_id', false );
+        $cl_names = [];
+        foreach ( $cl_ids as $cid ) {
+            $cl_names[] = get_the_title( $cid );
+        }
+
+        // Base row
+        $row = [
+            'Type'         => 'Doctor',
+            'ID'           => $did,
+            'Title'        => $post->post_title,
+            'Slug'         => $post->post_name,
+            'Clinics'      => implode( '|', $cl_names ),
+            'Doctor Name'  => get_post_meta( $did, 'doctor_name', true ),
+            'Doctor Title' => get_post_meta( $did, 'doctor_title', true ),
+        ];
+
+        // Add all other meta keys
+        $meta = get_post_meta( $did );
+        foreach ( $all_meta_keys as $key ) {
+            // skip keys we’ve already handled
+            if ( in_array( $key, ['clinic_id','doctor_name','doctor_title'], true ) ) {
+                continue;
+            }
+            $val = $meta[ $key ] ?? [''];
+            $row[ $key ] = is_array( $val )
+                ? implode( '|', array_map( 'maybe_serialize', $val ) )
+                : maybe_serialize( $val );
+        }
+
         fputcsv( $fp, $row );
     }
 

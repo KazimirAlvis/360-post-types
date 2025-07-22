@@ -9,8 +9,8 @@
 add_action( 'add_meta_boxes', 'cpt360_move_state_metabox', 5 );
 function cpt360_move_state_metabox() {
     // remove any WP‐core taxonomy box named "state" (hierarchical or tag style)
-    remove_meta_box( 'statediv',    'clinic', 'side' ); // hierarchical
-    remove_meta_box( 'tagsdiv-state','clinic', 'side' ); // non-hierarchical
+    remove_meta_box( 'statediv',        'clinic', 'side' ); // hierarchical
+    remove_meta_box( 'tagsdiv-state',  'clinic', 'side' ); // non-hierarchical
 
     // now add our own metabox into the main column
     add_meta_box(
@@ -99,10 +99,8 @@ add_action( 'add_meta_boxes', function() {
 
 // 2) Render the box
 function clinic_thumbnail_render_metabox( $post ) {
-  // nonce for security
   wp_nonce_field( 'clinic_thumbnail_nonce', 'clinic_thumbnail_nonce_field' );
 
-  // get current attachment ID + URL
   $thumb_id  = get_post_meta( $post->ID, '_clinic_thumbnail_id', true );
   $thumb_url = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'medium' ) : '';
   ?>
@@ -134,29 +132,18 @@ function clinic_thumbnail_render_metabox( $post ) {
   <?php
 }
 
-
-
-
 // 4) Save the attachment ID
 add_action( 'save_post', function( $post_id, $post ) {
-  // a) Bail on autosave/revisions
   if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
   if ( wp_is_post_revision( $post_id ) )         return;
-
-  // b) Only our CPT
-  if ( $post->post_type !== 'clinic' ) return;
-
-  // c) Nonce check
+  if ( $post->post_type !== 'clinic' )           return;
   if ( empty( $_POST['clinic_thumbnail_nonce_field'] )
     || ! wp_verify_nonce( $_POST['clinic_thumbnail_nonce_field'], 'clinic_thumbnail_nonce' )
   ) {
     return;
   }
-
-  // d) Capability check
   if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-  // e) Save or delete meta
   $new_id = isset( $_POST['clinic_thumbnail_field'] ) && is_numeric( $_POST['clinic_thumbnail_field'] )
             ? intval( $_POST['clinic_thumbnail_field'] )
             : '';
@@ -176,9 +163,6 @@ add_action( 'save_post', function( $post_id, $post ) {
 # Phone Number Meta Box
 --------------------------------------------------------------*/
 
-/**
- * 1) Add Phone Number meta box below logo (normal context, high priority)
- */
 add_action( 'add_meta_boxes', function() {
     add_meta_box(
         'cpt360_clinic_phone',
@@ -190,12 +174,8 @@ add_action( 'add_meta_boxes', function() {
     );
 } );
 
-/**
- * 2) Render the phone field
- */
 function cpt360_render_clinic_phone_metabox( $post ) {
     wp_nonce_field( 'cpt360_save_clinic_phone', 'cpt360_clinic_phone_nonce' );
-
     $phone = get_post_meta( $post->ID, '_cpt360_clinic_phone', true );
     ?>
     <p>
@@ -212,9 +192,6 @@ function cpt360_render_clinic_phone_metabox( $post ) {
     <?php
 }
 
-/**
- * 3) Save the phone number
- */
 add_action( 'save_post', function( $post_id ) {
     if ( ! isset( $_POST['cpt360_clinic_phone_nonce'] )
          || ! wp_verify_nonce( $_POST['cpt360_clinic_phone_nonce'], 'cpt360_save_clinic_phone' )
@@ -229,7 +206,6 @@ add_action( 'save_post', function( $post_id ) {
     }
 
     if ( isset( $_POST['cpt360_clinic_phone'] ) ) {
-        // sanitize: allow numbers, spaces, parentheses, dashes, plus
         $clean = preg_replace( '/[^\d\+\-\(\)\s]/', '', $_POST['cpt360_clinic_phone'] );
         update_post_meta( $post_id, '_cpt360_clinic_phone', $clean );
     } else {
@@ -247,17 +223,22 @@ add_action( 'add_meta_boxes', function() {
                 'render_clinic_addresses_box', 'clinic', 'normal', 'high' );
 } );
 
-// 2) Render the box (in cpt360-plugin.php)
+// 2) Render the box
 function render_clinic_addresses_box( $post ) {
   wp_nonce_field( 'save_clinic_addresses', 'clinic_addresses_nonce' );
-  $addresses = get_post_meta( $post->ID, 'clinic_addresses', true ) ?: [];
+
+  // make sure we always have an array
+  $addresses = get_post_meta( $post->ID, 'clinic_addresses', true );
+  if ( ! is_array( $addresses ) ) {
+    $addresses = [];
+  }
   ?>
   <div id="clinic-addresses-container">
     <?php foreach ( $addresses as $i => $addr ): ?>
-      <div class="clinic-address-row" data-index="<?php echo $i; ?>">
+      <div class="clinic-address-row" data-index="<?php echo esc_attr( $i ); ?>">
         <input type="text"
                name="clinic_addresses[<?php echo $i; ?>][street]"
-               value="<?php echo esc_attr( $addr['street'] ); ?>"
+               value="<?php echo esc_attr( $addr['street'] ?? '' ); ?>"
                placeholder="Street" />
         <!-- add other fields: city, state, zip -->
         <button class="remove-address button">–</button>
@@ -284,20 +265,20 @@ function render_clinic_addresses_box( $post ) {
     $(document).on('click', '.remove-address', function(e){
       e.preventDefault();
       $(this).closest('.clinic-address-row').remove();
-      // optionally re-index the remaining rows…
     });
   });
   </script>
   <?php
 }
+
 add_action( 'save_post', function( $post_id, $post ) {
   if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) return;
   if ( $post->post_type !== 'clinic' )    return;
-  if ( empty($_POST['clinic_addresses_nonce']) ||
+  if ( empty( $_POST['clinic_addresses_nonce'] ) ||
        ! wp_verify_nonce( $_POST['clinic_addresses_nonce'], 'save_clinic_addresses' )
   ) return;
 
-  $raw = $_POST['clinic_addresses'] ?? [];
+  $raw   = $_POST['clinic_addresses'] ?? [];
   $clean = [];
 
   foreach ( $raw as $addr ) {
@@ -311,7 +292,6 @@ add_action( 'save_post', function( $post_id, $post ) {
 
   update_post_meta( $post_id, 'clinic_addresses', $clean );
 }, 10, 2 );
-
 
 /*--------------------------------------------------------------
 # Clinic ID Meta Box
