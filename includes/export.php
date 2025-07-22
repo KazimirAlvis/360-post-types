@@ -103,64 +103,70 @@ add_action( 'admin_post_cpt360_export_data', function() {
     $clinic_ids = array_map( 'absint', (array) ( $_POST['clinic_ids'] ?? [] ) );
     $doctor_ids = array_map( 'absint', (array) ( $_POST['doctor_ids'] ?? [] ) );
 
-    // prepare CSV headers
+    // Gather all meta keys for clinics and doctors
+    $all_meta_keys = [];
+
+    foreach ( $clinic_ids as $cid ) {
+        $meta = get_post_meta( $cid );
+        $all_meta_keys = array_merge( $all_meta_keys, array_keys( $meta ) );
+    }
+    foreach ( $doctor_ids as $did ) {
+        $meta = get_post_meta( $did );
+        $all_meta_keys = array_merge( $all_meta_keys, array_keys( $meta ) );
+    }
+    $all_meta_keys = array_unique( $all_meta_keys );
+    sort( $all_meta_keys );
+
+    // Standard columns
+    $columns = array_merge(
+        [ 'Type', 'ID', 'Title', 'Slug' ],
+        $all_meta_keys
+    );
+
     $filename = 'cpt360-export-' . date( 'Y-m-d' ) . '.csv';
     header( 'Content-Type: text/csv; charset=utf-8' );
     header( 'Content-Disposition: attachment; filename=' . $filename );
 
-    // open php output stream
     $fp = fopen( 'php://output', 'w' );
-    // Column headings
-    fputcsv( $fp, [
-        'Type',
-        'ID',
-        'Title',
-        'Slug',
-        'Clinic Bio',
-        'Assessment ID',
-        // add more columns as needed
-    ] );
+    fputcsv( $fp, $columns );
 
     // Export Clinics
-    if ( $clinic_ids ) {
-        foreach ( $clinic_ids as $cid ) {
-            $post = get_post( $cid );
-            if ( ! $post || $post->post_type !== 'clinic' ) {
-                continue;
-            }
-            $bio = get_post_meta( $cid, '_cpt360_clinic_bio', true );
-            $assess = get_post_meta( $cid, '_cpt360_assessment_id', true );
-            fputcsv( $fp, [
-                'Clinic',
-                $cid,
-                $post->post_title,
-                $post->post_name,
-                wp_strip_all_tags( $bio ),
-                $assess,
-            ] );
+    foreach ( $clinic_ids as $cid ) {
+        $post = get_post( $cid );
+        if ( ! $post || $post->post_type !== 'clinic' ) continue;
+        $meta = get_post_meta( $cid );
+        $row = [
+            'Type'  => 'Clinic',
+            'ID'    => $cid,
+            'Title' => $post->post_title,
+            'Slug'  => $post->post_name,
+        ];
+        foreach ( $all_meta_keys as $key ) {
+            $val = $meta[$key] ?? [''];
+            // Flatten arrays for CSV
+            $row[$key] = is_array($val) ? implode( '|', array_map( 'maybe_serialize', $val ) ) : maybe_serialize( $val );
         }
+        fputcsv( $fp, $row );
     }
 
     // Export Doctors
-    if ( $doctor_ids ) {
-        foreach ( $doctor_ids as $did ) {
-            $post = get_post( $did );
-            if ( ! $post || $post->post_type !== 'doctor' ) {
-                continue;
-            }
-            // example: assume you store specialty in meta `_doctor_specialty`
-            $specialty = get_post_meta( $did, '_doctor_specialty', true );
-            fputcsv( $fp, [
-                'Doctor',
-                $did,
-                $post->post_title,
-                $post->post_name,
-                $specialty,
-                '',  // empty column for Assessment ID
-            ] );
+    foreach ( $doctor_ids as $did ) {
+        $post = get_post( $did );
+        if ( ! $post || $post->post_type !== 'doctor' ) continue;
+        $meta = get_post_meta( $did );
+        $row = [
+            'Type'  => 'Doctor',
+            'ID'    => $did,
+            'Title' => $post->post_title,
+            'Slug'  => $post->post_name,
+        ];
+        foreach ( $all_meta_keys as $key ) {
+            $val = $meta[$key] ?? [''];
+            $row[$key] = is_array($val) ? implode( '|', array_map( 'maybe_serialize', $val ) ) : maybe_serialize( $val );
         }
+        fputcsv( $fp, $row );
     }
 
     fclose( $fp );
     exit;
-} );
+});
