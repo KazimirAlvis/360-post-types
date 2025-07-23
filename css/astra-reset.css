@@ -41,6 +41,7 @@
 /*--------------------------------------------------------------
 fibroids / astra theme Buttons
 --------------------------------------------------------------*/
+.single-clinic main article pr360-questionnaire::part(begin-button),
 .single-clinic .ast-container main article pr360-questionnaire::part(begin-button) {
 	font-size: 18px !important;
 	font-family: var(--body-font) !important;
@@ -63,27 +64,9 @@ fibroids / astra theme Buttons
 	display: inline-block;
 	margin-bottom: 20px;
 }
-.single-clinic main article pr360-questionnaire::part(begin-button) {
-	font-size: 18px !important;
-	font-family: var(--body-font) !important;
-	font-weight: 500 !important;
-	border-radius: 27px !important;
-	padding: 15px 30px !important;
-	margin-top: auto !important;
-	cursor: pointer;
-	width: 312px !important;
-	max-width: 312px !important;
-	height: 54px !important;
-	min-height: auto !important;
-	text-align: center;
-	white-space: nowrap;
-	transition: transform 0.2s ease, background-color 0.2s ease !important;
-	display: block !important;
-	margin: 0;
-	line-height: 22px !important;
-	text-decoration: none;
-	display: inline-block;
-	margin-bottom: 20px;
+
+.single-clinic main article .btn {
+	margin-bottom: 0;
 }
 
 .single-clinic .ast-container main article pr360-questionnaire::part(begin-button) {
@@ -111,6 +94,9 @@ fibroids / astra theme Buttons
 	background-color: transparent !important;
 	color: #fff !important;
 	border: 1px solid #fff !important;
+}
+pr360-questionnaire::part(begin-button):hover {
+	transform: scale(1) !important;
 }
 
 @media (max-width: 768px) {
