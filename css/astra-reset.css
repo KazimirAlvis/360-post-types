@@ -41,8 +41,10 @@
 /*--------------------------------------------------------------
 fibroids / astra theme Buttons
 --------------------------------------------------------------*/
+
 .single-clinic main article pr360-questionnaire::part(begin-button),
-.single-clinic .ast-container main article pr360-questionnaire::part(begin-button) {
+.single-clinic .ast-container main article pr360-questionnaire::part(begin-button),
+.single-clinic main article .btn {
 	font-size: 18px !important;
 	font-family: var(--body-font) !important;
 	font-weight: 500 !important;
