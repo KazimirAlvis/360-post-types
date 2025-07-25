@@ -222,6 +222,7 @@
 	height: 100%;
 	object-fit: cover; /* crop & fill the container */
 	display: block;
+	order: 1px solid #dddddd;
 }
 .doctor-name {
 	margin: 0.5em 0 0.25em;
