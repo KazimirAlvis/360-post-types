@@ -215,7 +215,7 @@
 	border-radius: 50%; /* circle mask */
 	overflow: hidden;
 	margin: 0 auto;
-	order: 1px solid #dddddd;
+	border: 1px solid #dddddd;
 }
 
 .doctor-photo img {
