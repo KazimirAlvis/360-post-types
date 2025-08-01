@@ -925,7 +925,7 @@ function cpt360_get_clinic_logo_url( $post_id = null ) {
 }
 
 /*--------------------------------------------------------------
-# Show clinic assessment IDs in the asmin list
+# Show clinic assessment IDs in the admin list
 --------------------------------------------------------------*/
 
 /**
@@ -998,4 +998,66 @@ function cpt360_assessment_id_orderby( $query ) {
     }
 }
 
+
+
+/*--------------------------------------------------------------
+# Add "State" Column to Clinic Admin List
+--------------------------------------------------------------*/
+
+// 1. Add a new "State" column after the title
+add_filter( 'manage_clinic_posts_columns', 'cpt360_add_state_column' );
+function cpt360_add_state_column( $columns ) {
+    $new_columns = [];
+
+    foreach ( $columns as $key => $label ) {
+        $new_columns[ $key ] = $label;
+        if ( $key === 'title' ) {
+            $new_columns['clinic_state'] = __( 'State', 'cpt360' );
+        }
+    }
+
+    return $new_columns;
+}
+
+// 2. Populate the "State" column with full state name
+add_action( 'manage_clinic_posts_custom_column', 'cpt360_render_state_column', 10, 2 );
+function cpt360_render_state_column( $column, $post_id ) {
+    if ( $column !== 'clinic_state' ) return;
+
+    $abbr = get_post_meta( $post_id, '_cpt360_clinic_state', true );
+
+    $states = [
+        'AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas',
+        'CA'=>'California','CO'=>'Colorado','CT'=>'Connecticut','DE'=>'Delaware',
+        'FL'=>'Florida','GA'=>'Georgia','HI'=>'Hawaii','ID'=>'Idaho',
+        'IL'=>'Illinois','IN'=>'Indiana','IA'=>'Iowa','KS'=>'Kansas',
+        'KY'=>'Kentucky','LA'=>'Louisiana','ME'=>'Maine','MD'=>'Maryland',
+        'MA'=>'Massachusetts','MI'=>'Michigan','MN'=>'Minnesota','MS'=>'Mississippi',
+        'MO'=>'Missouri','MT'=>'Montana','NE'=>'Nebraska','NV'=>'Nevada',
+        'NH'=>'New Hampshire','NJ'=>'New Jersey','NM'=>'New Mexico','NY'=>'New York',
+        'NC'=>'North Carolina','ND'=>'North Dakota','OH'=>'Ohio','OK'=>'Oklahoma',
+        'OR'=>'Oregon','PA'=>'Pennsylvania','RI'=>'Rhode Island','SC'=>'South Carolina',
+        'SD'=>'South Dakota','TN'=>'Tennessee','TX'=>'Texas','UT'=>'Utah',
+        'VT'=>'Vermont','VA'=>'Virginia','WA'=>'Washington','WV'=>'West Virginia',
+        'WI'=>'Wisconsin','WY'=>'Wyoming',
+    ];
+
+    echo $abbr && isset( $states[ $abbr ] ) ? esc_html( $states[ $abbr ] ) : '—';
+}
+// 3. Make the State column sortable
+add_filter( 'manage_edit-clinic_sortable_columns', function( $columns ) {
+    $columns['clinic_state'] = 'clinic_state';
+    return $columns;
+});
+
+add_action( 'pre_get_posts', function( $query ) {
+    if (
+        is_admin() &&
+        $query->is_main_query() &&
+        $query->get('orderby') === 'clinic_state'
+    ) {
+        $query->set('meta_key', '_cpt360_clinic_state');
+        $query->set('orderby', 'meta_value');
+    }
+});
 
