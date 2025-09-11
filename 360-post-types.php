@@ -4,7 +4,7 @@
  * Plugin Name: 360 Post Types & Settings
  * Plugin URI:   https://github.com/KazimirAlvis/360-post-types
  * Description: Registers Clinics & Doctors CPTs, adds a State dropdown on Clinics, doctor->clinic relationships, and a global settings admin page for colors & fonts.
- * Version:     1.0.39
+ * Version:     1.0.40
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
  * GitHub Plugin URI: KazimirAlvis/360-post-types
@@ -18,29 +18,30 @@
 // ─────────────────────────────────────────────────────────────────
 // 1) Include the Update Checker library (make sure that folder and file exist)
 // ─────────────────────────────────────────────────────────────────
-// 1) include the v5 autoloader
 require_once __DIR__ . '/plugin-update-checker/plugin-update-checker.php';
-
-// 2) import the factory
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-// 3) build the checker
-$updateChecker = PucFactory::buildUpdateChecker(
+$myUpdateChecker = PucFactory::buildUpdateChecker(
     'https://github.com/KazimirAlvis/360-post-types/',
     __FILE__,
     '360-post-types'
 );
 
-// 4) override branch if you must (only works on the checker itself)
-$updateChecker->setBranch('main');
+$myUpdateChecker->setBranch('main');
 
-// Add debugging to see what's happening
-if (defined('WP_DEBUG') && WP_DEBUG) {
-    $updateChecker->addFilter('request_info_result', function($pluginInfo, $result) {
-        error_log('360 Plugin Update Check: ' . print_r($result, true));
-        return $pluginInfo;
-    }, 10, 2);
-}
+// Force an update check on plugin activation
+register_activation_hook(__FILE__, function() {
+    delete_site_transient('update_plugins');
+});
+
+// Clear cached update data
+add_action('wp_loaded', function() {
+    if (isset($_GET['force_check_360']) && current_user_can('manage_options')) {
+        delete_site_transient('update_plugins');
+        wp_redirect(admin_url('plugins.php'));
+        exit;
+    }
+});
 
 
 
