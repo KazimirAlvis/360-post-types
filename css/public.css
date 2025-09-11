@@ -458,3 +458,94 @@
 	color: #fff !important;
 	border: 1px solid var(--cpt360-primary) !important;
 }
+
+/*--------------------------------------------------------------
+ state shortcode styling
+--------------------------------------------------------------*/
+.state-clinics-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 2rem;
+	margin: 2em 0;
+	justify-content: center;
+	align-items: stretch; /* Ensures equal height columns */
+}
+.state-clinics-grid .state-clinic {
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 12px;
+	padding: 2em 1em 0px 1em;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	max-width: 352.57px;
+	width: 100%;
+	height: 100%; /* Ensures child stretches to fill grid cell */
+}
+.state-clinics-grid .state-clinic:hover {
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+	cursor: pointer;
+}
+.state-clinics-grid .state-clinic .clinic-logo img {
+	max-width: 300px;
+	max-height: 150px;
+	width: 100%;
+	object-fit: contain;
+	margin-bottom: 1em;
+}
+.state-clinics-grid .state-clinic .clinic-logo {
+	margin: 20px 0;
+}
+.state-clinics-grid .state-clinic .clinic-title {
+	font-family: var(--heading-font);
+	font-size: 1.25rem;
+	margin: 0.5em 0 0;
+}
+.state-clinics-grid .state-clinic .clinic-title a {
+	color: #000;
+	text-decoration: none;
+}
+.state-clinics-grid .row-1 {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+}
+.state-clinics-grid .row-2 {
+	border-top: 1px solid #ddd;
+	margin-top: auto;
+	border-top: 1px solid #ddd;
+	margin-top: auto;
+	padding-bottom: 18px;
+	padding-top: 10px;
+}
+
+/* Center if only 1 or 2 clinics */
+.state-clinics-grid:has(.state-clinic:nth-child(2)):not(:has(.state-clinic:nth-child(3))),
+.state-clinics-grid:has(.state-clinic):not(:has(.state-clinic:nth-child(2))) {
+	display: flex;
+	justify-content: center;
+	gap: 2rem;
+	align-items: stretch; /* Ensures equal height in flex mode */
+}
+.state-clinics-grid:has(.state-clinic:nth-child(2)):not(:has(.state-clinic:nth-child(3))) .row-1,
+.state-clinics-grid:has(.state-clinic):not(:has(.state-clinic:nth-child(2))) .row-1 {
+	min-height: 205.99px;
+}
+
+@media (max-width: 900px) {
+	.state-clinics-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.state-clinics-grid:has(.state-clinic:nth-child(2)):not(:has(.state-clinic:nth-child(3))),
+	.state-clinics-grid:has(.state-clinic):not(:has(.state-clinic:nth-child(2))) {
+		flex-direction: column;
+		align-items: center;
+	}
+}
+@media (max-width: 600px) {
+	.state-clinics-grid {
+		grid-template-columns: 1fr;
+	}
+}

@@ -1061,3 +1061,60 @@ add_action( 'pre_get_posts', function( $query ) {
     }
 });
 
+
+/*--------------------------------------------------------------
+# Shortcode: Display Clinics by State  
+--------------------------------------------------------------*/
+
+add_shortcode('cpt360_state_clinics', function($atts) {
+    $atts = shortcode_atts([
+        'state' => ''
+    ], $atts);
+    
+    if (empty($atts['state'])) {
+        return '<p>Please specify a state.</p>';
+    }
+    
+    ob_start();
+    
+    $clinics = get_posts([
+        'post_type' => 'clinic',
+        'posts_per_page' => -1,
+        'meta_key' => '_cpt360_clinic_state',
+        'meta_value' => $atts['state'],
+        'post_status' => 'publish'
+    ]);
+    
+    if (empty($clinics)) {
+        echo '<p>No clinics found for state: ' . esc_html($atts['state']) . '</p>';
+        return ob_get_clean();
+    }
+    
+    echo '<div class="state-clinics-grid">';
+    
+    foreach ($clinics as $clinic) {
+        $logo_url = cpt360_get_clinic_logo_url($clinic->ID);
+        $clinic_name = get_the_title($clinic->ID);
+        $clinic_url = get_permalink($clinic->ID);
+        
+        echo '<div class="state-clinic" onclick="window.location.href=\'' . esc_url($clinic_url) . '\'">';
+        echo '<div class="row-1">';
+        echo '<div class="clinic-logo">';
+        if ($logo_url) {
+            echo '<img src="' . esc_url($logo_url) . '" alt="' . esc_attr($clinic_name) . '">';
+        }
+        echo '</div>';
+        echo '</div>';
+        echo '<div class="row-2">';
+        echo '<div class="clinic-title">';
+        echo '<a href="' . esc_url($clinic_url) . '">' . esc_html($clinic_name) . '</a>';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
+    }
+    
+    echo '</div>';
+    
+    return ob_get_clean();
+});
+
