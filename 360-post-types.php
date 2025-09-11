@@ -4,11 +4,12 @@
  * Plugin Name: 360 Post Types & Settings
  * Plugin URI:   https://github.com/KazimirAlvis/360-post-types
  * Description: Registers Clinics & Doctors CPTs, adds a State dropdown on Clinics, doctor->clinic relationships, and a global settings admin page for colors & fonts.
- * Version:     1.0.37
+ * Version:     1.0.38
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
  * GitHub Plugin URI: KazimirAlvis/360-post-types
  * GitHub Branch:     main
+ * Update Server: https://github.com/KazimirAlvis/360-post-types
  */
 
  
