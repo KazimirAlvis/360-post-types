@@ -4,7 +4,7 @@
  * Plugin Name: 360 Post Types & Settings
  * Plugin URI:   https://github.com/KazimirAlvis/360-post-types
  * Description: Registers Clinics & Doctors CPTs, adds a State dropdown on Clinics, doctor->clinic relationships, and a global settings admin page for colors & fonts.
- * Version:     1.0.40
+ * Version:     1.0.41
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
  * GitHub Plugin URI: KazimirAlvis/360-post-types
@@ -18,30 +18,21 @@
 // ─────────────────────────────────────────────────────────────────
 // 1) Include the Update Checker library (make sure that folder and file exist)
 // ─────────────────────────────────────────────────────────────────
+// 1) include the v5 autoloader
 require_once __DIR__ . '/plugin-update-checker/plugin-update-checker.php';
+
+// 2) import the factory
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-$myUpdateChecker = PucFactory::buildUpdateChecker(
+// 3) build the checker
+$updateChecker = PucFactory::buildUpdateChecker(
     'https://github.com/KazimirAlvis/360-post-types/',
     __FILE__,
     '360-post-types'
 );
 
-$myUpdateChecker->setBranch('main');
-
-// Force an update check on plugin activation
-register_activation_hook(__FILE__, function() {
-    delete_site_transient('update_plugins');
-});
-
-// Clear cached update data
-add_action('wp_loaded', function() {
-    if (isset($_GET['force_check_360']) && current_user_can('manage_options')) {
-        delete_site_transient('update_plugins');
-        wp_redirect(admin_url('plugins.php'));
-        exit;
-    }
-});
+// 4) override branch if you must (only works on the checker itself)
+$updateChecker->setBranch('main');
 
 
 
