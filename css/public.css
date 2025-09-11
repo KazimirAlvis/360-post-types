@@ -458,3 +458,99 @@
 	color: #fff !important;
 	border: 1px solid var(--cpt360-primary) !important;
 }
+
+
+/*--------------------------------------------------------------
+ Shortcode Clinic Grids
+--------------------------------------------------------------*/
+
+.cpt360-state-clinics-grid, 
+.cpt360-clinic-by-name {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.clinic-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.clinic-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.clinic-logo {
+    margin-bottom: 1rem;
+}
+
+.clinic-logo img {
+    max-width: 150px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.clinic-info {
+    /* No additional padding needed since it's on the card */
+}
+
+.clinic-info h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-family: var(--heading-font);
+}
+
+.clinic-info h3 a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.clinic-info h3 a:hover {
+    color: var(--cpt360-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cpt360-state-clinics-grid, 
+    .cpt360-clinic-by-name {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .clinic-card {
+        padding: 1rem;
+    }
+}
+
+/* Handle single clinic display */
+.cpt360-clinic-by-name .clinic-card {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Handle 2 clinics */
+.cpt360-state-clinics-grid:has(.clinic-card:nth-child(2):last-child) {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+@media (max-width: 768px) {
+    .cpt360-state-clinics-grid:has(.clinic-card:nth-child(2):last-child) {
+        grid-template-columns: 1fr;
+        max-width: none;
+        margin: 1rem 0;
+    }
+}
