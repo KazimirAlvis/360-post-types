@@ -4,7 +4,7 @@
  * Plugin Name: 360 Post Types & Settings
  * Plugin URI:   https://github.com/KazimirAlvis/360-post-types
  * Description: Registers Clinics & Doctors CPTs, adds a State dropdown on Clinics, doctor->clinic relationships, and a global settings admin page for colors & fonts.
- * Version:     1.0.43
+ * Version:     1.0.44
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
  * GitHub Plugin URI: KazimirAlvis/360-post-types
@@ -30,7 +30,8 @@ $updateChecker = PucFactory::buildUpdateChecker(
     '360-post-types'
 );
 
-// 4) override branch if you must (only works on the checker itself)
+// 4) Set to use tags instead of releases
+$updateChecker->getVcsApi()->enableReleaseAssets(false);
 $updateChecker->setBranch('main');
 
 
