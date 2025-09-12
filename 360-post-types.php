@@ -7,7 +7,7 @@
  * Version:     1.0.42
  * Author:      Kaz Alvis
  * Text Domain:  360-post-types
- * GitHub Plugin URI: your-org/360-post-types
+ * GitHub Plugin URI: KazimirAlvis/360-post-types
  * GitHub Branch:     main
  */
 
