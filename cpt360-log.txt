@@ -1,0 +1,7 @@
+[2025-09-12T18:39:04+00:00] --- Activation/request start ---
+[2025-09-12T18:39:04+00:00] CPT360_SKIP_ALL active – no includes loaded.
+[2025-09-12T18:39:04+00:00] Activation hook fired successfully.
+[2025-09-12T18:39:04+00:00] --- Activation/request start ---
+[2025-09-12T18:39:04+00:00] CPT360_SKIP_ALL active – no includes loaded.
+[2025-09-12T18:39:46+00:00] --- Activation/request start ---
+[2025-09-12T18:39:46+00:00] CPT360_SKIP_ALL active – no includes loaded.

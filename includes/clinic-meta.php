@@ -26,7 +26,7 @@ function cpt360_move_state_metabox() {
 // 2) Render our custom State dropdown
 function cpt360_render_clinic_state_metabox( $post ) {
     wp_nonce_field( 'cpt360_save_clinic_state', 'cpt360_clinic_state_nonce' );
-    $current = get_post_meta( $post->ID, '_cpt360_clinic_state', true );
+    $current_states = get_post_meta( $post->ID, '_cpt360_clinic_state', false ); // false to get array of all values
 
     $states = [
         'AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas',
@@ -44,21 +44,21 @@ function cpt360_render_clinic_state_metabox( $post ) {
         'WI'=>'Wisconsin','WY'=>'Wyoming',
     ];
 
-    echo '<label for="cpt360_clinic_state">' . __( 'Select State:', 'cpt360' ) . '</label><br>';
-    echo '<select name="cpt360_clinic_state" id="cpt360_clinic_state" style="width:100%;max-width:300px">';
-    echo '<option value="">' . __( '— None —', 'cpt360' ) . '</option>';
+    echo '<label>' . __( 'Select State(s):', 'cpt360' ) . '</label><br>';
+    echo '<select name="cpt360_clinic_state[]" id="cpt360_clinic_state" style="width:100%;max-width:300px" multiple size="5">';
     foreach ( $states as $abbr => $name ) {
         printf(
             '<option value="%s"%s>%s</option>',
             esc_attr( $abbr ),
-            selected( $current, $abbr, false ),
+            in_array( $abbr, $current_states ) ? ' selected' : '',
             esc_html( $name )
         );
     }
     echo '</select>';
+    echo '<p class="description">' . __('Hold Ctrl/Cmd to select multiple states', 'cpt360') . '</p>';
 }
 
-// 3) Save the selected state
+// 3) Save the selected state(s)
 add_action( 'save_post_clinic', 'cpt360_save_clinic_state' );
 function cpt360_save_clinic_state( $post_id ) {
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
@@ -67,13 +67,14 @@ function cpt360_save_clinic_state( $post_id ) {
     if ( get_post_type( $post_id ) !== 'clinic' ) return;
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-    $new = isset( $_POST['cpt360_clinic_state'] )
-         ? sanitize_text_field( $_POST['cpt360_clinic_state'] )
-         : '';
-    if ( $new ) {
-        update_post_meta( $post_id, '_cpt360_clinic_state', $new );
-    } else {
-        delete_post_meta( $post_id, '_cpt360_clinic_state' );
+    // Delete existing states first
+    delete_post_meta( $post_id, '_cpt360_clinic_state' );
+    
+    // Add each selected state as a separate meta entry
+    if ( isset( $_POST['cpt360_clinic_state'] ) && is_array( $_POST['cpt360_clinic_state'] ) ) {
+        foreach ( $_POST['cpt360_clinic_state'] as $state ) {
+            add_post_meta( $post_id, '_cpt360_clinic_state', sanitize_text_field( $state ) );
+        }
     }
 }
 
@@ -552,7 +553,7 @@ function render_clinic_info_box( $post ) {
                placeholder="Description"
                rows="2"
                style="width:65%;"><?php echo esc_textarea( $item['description'] ); ?></textarea>
-        <button class="remove-info button" style="">–</button>
+        <button class="remove-info button">–</button>
       </div>
     <?php endforeach; ?>
   </div>
@@ -1024,7 +1025,11 @@ add_action( 'manage_clinic_posts_custom_column', 'cpt360_render_state_column', 1
 function cpt360_render_state_column( $column, $post_id ) {
     if ( $column !== 'clinic_state' ) return;
 
-    $abbr = get_post_meta( $post_id, '_cpt360_clinic_state', true );
+    $states_abbr = get_post_meta( $post_id, '_cpt360_clinic_state', false );
+    if (empty($states_abbr)) {
+        echo '—';
+        return;
+    }
 
     $states = [
         'AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas',
@@ -1042,7 +1047,14 @@ function cpt360_render_state_column( $column, $post_id ) {
         'WI'=>'Wisconsin','WY'=>'Wyoming',
     ];
 
-    echo $abbr && isset( $states[ $abbr ] ) ? esc_html( $states[ $abbr ] ) : '—';
+    $state_names = [];
+    foreach ($states_abbr as $abbr) {
+        if (isset($states[$abbr])) {
+            $state_names[] = $states[$abbr];
+        }
+    }
+
+    echo esc_html(implode(', ', $state_names));
 }
 // 3. Make the State column sortable
 add_filter( 'manage_edit-clinic_sortable_columns', function( $columns ) {
@@ -1056,6 +1068,7 @@ add_action( 'pre_get_posts', function( $query ) {
         $query->is_main_query() &&
         $query->get('orderby') === 'clinic_state'
     ) {
+        // For multiple states, we'll sort by the first state
         $query->set('meta_key', '_cpt360_clinic_state');
         $query->set('orderby', 'meta_value');
     }
@@ -1063,25 +1076,42 @@ add_action( 'pre_get_posts', function( $query ) {
 
 
 /**
- * Shortcode: [cpt360_state_clinics state="DE"]
+ * Shortcode: [cpt360_state_clinics state="DE" clinics="clinic-one,clinic-two"]
  * Displays clinics in the given state (by 2-letter abbreviation).
+ * Can also display specific clinics by providing comma-separated slugs or IDs.
  */
 add_shortcode('cpt360_state_clinics', function($atts) {
     $atts = shortcode_atts([
         'state' => '',
+        'clinics' => '',
     ], $atts, 'cpt360_state_clinics');
 
-    $state = strtoupper(trim($atts['state']));
-    if (!$state) return '';
+    // First check if clinics parameter is provided
+    if (!empty($atts['clinics'])) {
+        $clinic_slugs = array_map('trim', explode(',', $atts['clinics']));
+        
+        // Get clinics by slug
+        $clinics = get_posts([
+            'post_type'      => 'clinic',
+            'posts_per_page' => -1,
+            'post_name__in'  => $clinic_slugs,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ]);
+    } else {
+        // Traditional state filter
+        $state = strtoupper(trim($atts['state']));
+        if (!$state) return '';
 
-    $clinics = get_posts([
-        'post_type'      => 'clinic',
-        'posts_per_page' => -1,
-        'meta_key'       => '_cpt360_clinic_state',
-        'meta_value'     => $state,
-        'orderby'        => 'title',
-        'order'          => 'ASC',
-    ]);
+        $clinics = get_posts([
+            'post_type'      => 'clinic',
+            'posts_per_page' => -1,
+            'meta_key'       => '_cpt360_clinic_state',
+            'meta_value'     => $state,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ]);
+    }
 
     if (!$clinics) return '<p>No clinics found in this state.</p>';
 
