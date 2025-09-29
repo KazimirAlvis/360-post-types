@@ -168,7 +168,7 @@
 .map_heading h4 {
 	font-family: var(--heading-font);
 	font-size: 24px;
-	color: #fff;
+	color: #fff !important;
 	margin: 20px 0 10px 0;
 }
 .map_heading p {
@@ -511,6 +511,7 @@
 	justify-content: center;
 	align-items: center;
 	height: 100%;
+	min-height: 170px;
 }
 .state-clinics-grid .row-2 {
 	border-top: 1px solid #ddd;
